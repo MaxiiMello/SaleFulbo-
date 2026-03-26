@@ -92,17 +92,11 @@ class MatchesController extends StateNotifier<List<MatchPost>> {
     if (target.createdByUserId != userId) {
       return const CloseMatchResult(status: CloseMatchStatus.notAuthorized);
     }
-    if (target.isClosed) {
-      return CloseMatchResult(status: CloseMatchStatus.alreadyClosed, match: target);
-    }
 
-    final MatchPost updated = target.copyWith(isClosed: true);
-    state = state.map((MatchPost match) {
-      return match.id == matchId ? updated : match;
-    }).toList();
+    state = state.where((MatchPost match) => match.id != matchId).toList();
 
     await _storage.saveMatches(state);
-    return CloseMatchResult(status: CloseMatchStatus.closed, match: updated);
+    return const CloseMatchResult(status: CloseMatchStatus.closed);
   }
 
   MatchPost? _findById(String id) {

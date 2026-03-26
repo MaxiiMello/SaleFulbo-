@@ -25,9 +25,9 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   final CourtSearchService _courtSearchService = CourtSearchService();
 
-  int _totalPlayers = 10;
-  int _missingPlayers = 2;
   FootballFormat _format = FootballFormat.five;
+  late int _totalPlayers;
+  int _missingPlayers = 1;
   MatchIntensity _intensity = MatchIntensity.tranquilo;
   DateTime _scheduledAt = DateTime.now().add(const Duration(hours: 1));
   double? _selectedLatitude;
@@ -40,6 +40,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   @override
   void initState() {
     super.initState();
+    _totalPlayers = expectedPlayersForFormat(_format);
     _loadPosition();
   }
 
@@ -81,7 +82,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
   }
 
   Future<void> _searchCourts(String query) async {
-    if (_currentPosition == null || query.trim().length < 2) {
+    if (query.trim().length < 2) {
       if (!mounted) return;
       setState(() {
         _suggestions = <CourtSuggestion>[];
@@ -90,14 +91,17 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       return;
     }
 
+    final double baseLat = CourtSearchService.riveraLivramentoCenterLat;
+    final double baseLon = CourtSearchService.riveraLivramentoCenterLon;
+
     setState(() {
       _searchingCourts = true;
     });
 
     final List<CourtSuggestion> results = await _courtSearchService.searchNearbyCourts(
       query: query,
-      userLatitude: _currentPosition!.latitude,
-      userLongitude: _currentPosition!.longitude,
+      userLatitude: baseLat,
+      userLongitude: baseLon,
       radiusKm: 15,
     );
 
@@ -176,7 +180,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
       isClosed: false,
       format: _format,
       intensity: _intensity,
-      courtPrice: double.parse(_priceController.text.trim()),
+      pricePerPlayer: double.parse(_priceController.text.trim()),
       creatorRating: 4.8,
       playerRating: 4.6,
     );
@@ -197,7 +201,6 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               controller: _titleController,
               decoration: const InputDecoration(
                 labelText: 'Titulo',
-                hintText: 'Ejemplo: Fulbo martes 21:00',
               ),
               validator: _requiredValidator,
             ),
@@ -207,7 +210,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               onChanged: _onCourtQueryChanged,
               decoration: const InputDecoration(
                 labelText: 'Cancha',
-                hintText: 'Ejemplo: Cancha Los Pibes',
+                hintText: 'Busca por nombre o abreviacion',
               ),
               validator: _requiredValidator,
             ),
@@ -243,8 +246,7 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
               controller: _priceController,
               keyboardType: const TextInputType.numberWithOptions(decimal: true),
               decoration: const InputDecoration(
-                labelText: 'Precio de cancha (total)',
-                hintText: 'Ejemplo: 2000',
+                labelText: 'Precio por jugador',
                 prefixText: '\$ ',
               ),
               validator: _numberValidator,
@@ -263,6 +265,8 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
                 if (value == null) return;
                 setState(() {
                   _format = value;
+                  _totalPlayers = expectedPlayersForFormat(value);
+                  _missingPlayers = _missingPlayers.clamp(1, _totalPlayers);
                 });
               },
             ),
@@ -285,28 +289,13 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
             ),
             const SizedBox(height: 16),
             Text('Jugadores totales: $_totalPlayers'),
-            Slider(
-              value: _totalPlayers.toDouble(),
-              min: 6,
-              max: 22,
-              divisions: 16,
-              label: '$_totalPlayers',
-              onChanged: (double value) {
-                setState(() {
-                  _totalPlayers = value.round();
-                  if (_missingPlayers > _totalPlayers) {
-                    _missingPlayers = _totalPlayers;
-                  }
-                });
-              },
-            ),
             const SizedBox(height: 8),
             Text('Cuantos faltan: $_missingPlayers'),
             Slider(
               value: _missingPlayers.toDouble(),
-              min: 0,
+              min: 1,
               max: _totalPlayers.toDouble(),
-              divisions: _totalPlayers,
+              divisions: _totalPlayers - 1,
               label: '$_missingPlayers',
               onChanged: (double value) {
                 setState(() {

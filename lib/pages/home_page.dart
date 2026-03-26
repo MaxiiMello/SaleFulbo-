@@ -109,16 +109,16 @@ class _HomePageState extends ConsumerState<HomePage> {
       return;
     }
 
+    final bool shouldClose = await _confirmCloseMatchDialog(match);
+    if (!shouldClose) return;
+
     final CloseMatchResult result =
         await ref.read(matchesControllerProvider.notifier).closeMatch(match.id, currentUser.id);
 
     if (!mounted) return;
     switch (result.status) {
       case CloseMatchStatus.closed:
-        _showSimpleMessage('Partido cerrado correctamente.');
-        return;
-      case CloseMatchStatus.alreadyClosed:
-        _showSimpleMessage('Ese partido ya estaba cerrado.');
+        _showSimpleMessage('Partido cerrado y removido del listado.');
         return;
       case CloseMatchStatus.notAuthorized:
         _showSimpleMessage('Solo el creador puede cerrar este partido.');
@@ -126,7 +126,34 @@ class _HomePageState extends ConsumerState<HomePage> {
       case CloseMatchStatus.notFound:
         _showSimpleMessage('No encontramos ese partido.');
         return;
+      case CloseMatchStatus.alreadyClosed:
+        _showSimpleMessage('Ese partido ya estaba cerrado.');
+        return;
     }
+  }
+
+  Future<bool> _confirmCloseMatchDialog(MatchPost match) async {
+    final bool? result = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cerrar partido'),
+          content: Text('Deseas cerrar "${match.title}"? Esta accion lo quitara del listado.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('No'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Si, cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    return result ?? false;
   }
 
   void _showSimpleMessage(String message) {

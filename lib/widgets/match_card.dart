@@ -54,7 +54,7 @@ class MatchCard extends StatelessWidget {
             Text('Faltan: ${match.missingPlayers} de ${match.totalPlayers}'),
             Text('Categoria: ${footballFormatLabel(match.format)}'),
             Text('Intensidad: ${intensityLabel(match.intensity)}'),
-            Text('Precio cancha: ${match.courtPrice.toStringAsFixed(0)}'),
+            Text('Precio por jugador: ${match.pricePerPlayer.toStringAsFixed(0)}'),
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,

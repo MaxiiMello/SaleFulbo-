@@ -4,6 +4,17 @@ enum FootballFormat {
   eleven,
 }
 
+int expectedPlayersForFormat(FootballFormat format) {
+  switch (format) {
+    case FootballFormat.five:
+      return 10;
+    case FootballFormat.seven:
+      return 14;
+    case FootballFormat.eleven:
+      return 22;
+  }
+}
+
 enum MatchIntensity {
   tranquilo,
   moderado,
@@ -47,7 +58,7 @@ class MatchPost {
     required this.isClosed,
     required this.format,
     required this.intensity,
-    required this.courtPrice,
+    required this.pricePerPlayer,
     required this.creatorRating,
     required this.playerRating,
     Set<String>? joinedPlayerIds,
@@ -66,7 +77,7 @@ class MatchPost {
   final bool isClosed;
   final FootballFormat format;
   final MatchIntensity intensity;
-  final double courtPrice;
+  final double pricePerPlayer;
   final double creatorRating;
   final double playerRating;
   final Set<String> joinedPlayerIds;
@@ -85,7 +96,7 @@ class MatchPost {
     bool? isClosed,
     FootballFormat? format,
     MatchIntensity? intensity,
-    double? courtPrice,
+    double? pricePerPlayer,
     double? creatorRating,
     double? playerRating,
     Set<String>? joinedPlayerIds,
@@ -104,7 +115,7 @@ class MatchPost {
       isClosed: isClosed ?? this.isClosed,
       format: format ?? this.format,
       intensity: intensity ?? this.intensity,
-      courtPrice: courtPrice ?? this.courtPrice,
+      pricePerPlayer: pricePerPlayer ?? this.pricePerPlayer,
       creatorRating: creatorRating ?? this.creatorRating,
       playerRating: playerRating ?? this.playerRating,
       joinedPlayerIds: joinedPlayerIds ?? Set<String>.from(this.joinedPlayerIds),
@@ -126,7 +137,7 @@ class MatchPost {
       'isClosed': isClosed,
       'format': format.name,
       'intensity': intensity.name,
-      'courtPrice': courtPrice,
+      'pricePerPlayer': pricePerPlayer,
       'creatorRating': creatorRating,
       'playerRating': playerRating,
       'joinedPlayerIds': joinedPlayerIds.toList(),
@@ -144,9 +155,9 @@ class MatchPost {
       missingPlayers: map['missingPlayers'] as int,
       latitude: (map['latitude'] as num).toDouble(),
       longitude: (map['longitude'] as num).toDouble(),
-        scheduledAt:
+      scheduledAt:
           DateTime.tryParse(map['scheduledAt'] as String? ?? '') ?? DateTime.now().add(const Duration(hours: 1)),
-        isClosed: map['isClosed'] as bool? ?? false,
+      isClosed: map['isClosed'] as bool? ?? false,
       format: FootballFormat.values.firstWhere(
         (FootballFormat v) => v.name == map['format'],
         orElse: () => FootballFormat.five,
@@ -155,7 +166,7 @@ class MatchPost {
         (MatchIntensity v) => v.name == map['intensity'],
         orElse: () => MatchIntensity.tranquilo,
       ),
-      courtPrice: (map['courtPrice'] as num?)?.toDouble() ?? 0,
+      pricePerPlayer: ((map['pricePerPlayer'] as num?) ?? (map['courtPrice'] as num?) ?? 0).toDouble(),
       creatorRating: (map['creatorRating'] as num).toDouble(),
       playerRating: (map['playerRating'] as num).toDouble(),
       joinedPlayerIds: Set<String>.from(((map['joinedPlayerIds'] as List<dynamic>?) ?? <dynamic>[]).cast<String>()),

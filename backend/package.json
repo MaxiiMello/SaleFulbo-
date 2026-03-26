@@ -1,0 +1,13 @@
+{
+  "name": "salefulbo-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Containerized API bootstrap for SaleFulbo",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
