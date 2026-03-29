@@ -42,10 +42,9 @@ class SaleFulboApp extends ConsumerWidget {
           case AppRoutes.createMatch:
             final AppUser? creator = settings.arguments as AppUser?;
             return MaterialPageRoute<MatchPost>(
-              builder: (BuildContext context) =>
-                  isLogged && creator != null
-                      ? CreateMatchPage(currentUser: creator)
-                      : const LoginPage(),
+              builder: (BuildContext context) => isLogged && creator != null
+                  ? CreateMatchPage(currentUser: creator)
+                  : const LoginPage(),
               settings: settings,
             );
           default:
