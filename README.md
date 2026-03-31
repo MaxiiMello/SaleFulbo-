@@ -50,3 +50,27 @@ To remove volumes too:
 ```powershell
 docker compose down -v
 ```
+
+## CI framework (errores grandes)
+
+This project now includes automated CI to catch major issues on every push/PR.
+
+Workflow file:
+- `.github/workflows/flutter_ci.yml`
+
+What it runs:
+- `flutter pub get`
+- `flutter analyze`
+- `flutter test`
+- `flutter build apk --release`
+- `flutter build web --release`
+
+Artifacts generated in GitHub Actions:
+- `app-release-apk`
+- `web-build`
+
+How to view errors:
+1. Push changes to GitHub.
+2. Open the **Actions** tab in your repository.
+3. Open the latest **Flutter CI** run.
+4. Review the failed step logs.
