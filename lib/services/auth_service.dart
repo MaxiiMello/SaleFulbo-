@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -25,8 +26,21 @@ class AuthService {
   AppUser? get currentUser => _firebaseAuth == null ? _demoUser : _mapFirebaseUser(_firebaseAuth.currentUser);
 
   Future<AppUser> signInWithGoogle() async {
-    if (_firebaseAuth == null) {
+    final FirebaseAuth? firebaseAuth = _firebaseAuth;
+    if (firebaseAuth == null) {
       throw Exception('Firebase no esta configurado. Usa modo demo o conecta Firebase.');
+    }
+
+    if (kIsWeb) {
+      final GoogleAuthProvider provider = GoogleAuthProvider();
+      provider.setCustomParameters(<String, String>{'prompt': 'select_account'});
+
+      final UserCredential result = await firebaseAuth.signInWithPopup(provider);
+      final AppUser? user = _mapFirebaseUser(result.user);
+      if (user == null) {
+        throw Exception('No se pudo iniciar sesion con Google.');
+      }
+      return user;
     }
 
     final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -40,7 +54,7 @@ class AuthService {
       idToken: googleAuth.idToken,
     );
 
-    final UserCredential result = await _firebaseAuth.signInWithCredential(credential);
+    final UserCredential result = await firebaseAuth.signInWithCredential(credential);
     final AppUser? user = _mapFirebaseUser(result.user);
     if (user == null) {
       throw Exception('No se pudo iniciar sesion con Google.');
@@ -58,12 +72,13 @@ class AuthService {
   }
 
   Future<void> signOut() async {
-    if (_firebaseAuth == null) {
+    final FirebaseAuth? firebaseAuth = _firebaseAuth;
+    if (firebaseAuth == null) {
       _demoUser = null;
       return;
     }
     await Future.wait(<Future<void>>[
-      _firebaseAuth.signOut(),
+      firebaseAuth.signOut(),
       _googleSignIn.signOut(),
     ]);
   }

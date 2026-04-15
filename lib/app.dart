@@ -7,6 +7,7 @@ import 'navigation/app_routes.dart';
 import 'pages/create_match_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'pages/register_page.dart';
 import 'state/auth_controller.dart';
 
 class SaleFulboApp extends ConsumerWidget {
@@ -31,6 +32,12 @@ class SaleFulboApp extends ConsumerWidget {
             return MaterialPageRoute<void>(
               builder: (BuildContext context) =>
                   isLogged ? const HomePage() : const LoginPage(),
+              settings: settings,
+            );
+          case AppRoutes.register:
+            return MaterialPageRoute<void>(
+              builder: (BuildContext context) =>
+                  isLogged ? const HomePage() : const RegisterPage(),
               settings: settings,
             );
           case AppRoutes.home:

@@ -5,8 +5,8 @@ import '../models/app_user.dart';
 import '../navigation/app_routes.dart';
 import '../state/auth_controller.dart';
 
-class LoginPage extends ConsumerWidget {
-  const LoginPage({super.key});
+class RegisterPage extends ConsumerWidget {
+  const RegisterPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -28,7 +28,7 @@ class LoginPage extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Inicia sesión para publicar y unirte a partidos.',
+                'Crea tu cuenta para publicar y unirte a partidos.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
@@ -44,19 +44,12 @@ class LoginPage extends ConsumerWidget {
                   } catch (error) {
                     if (!context.mounted) return;
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error de login: $error')),
+                      SnackBar(content: Text('Error de registro: $error')),
                     );
                   }
                 },
-                icon: const Icon(Icons.login),
-                label: const Text('Entrar con Google'),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pushNamed(AppRoutes.register);
-                },
-                child: const Text('¿No tienes cuenta? Regístrate'),
+                icon: const Icon(Icons.person_add),
+                label: const Text('Registrarse con Google'),
               ),
               if (!firebaseConfigured) ...<Widget>[
                 const SizedBox(height: 10),
@@ -74,6 +67,13 @@ class LoginPage extends ConsumerWidget {
                 ),
               ],
               const SizedBox(height: 12),
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+                },
+                child: const Text('¿Ya tienes cuenta? Inicia sesión'),
+              ),
+              const SizedBox(height: 12),
               authState.when(
                 data: (_) => const SizedBox.shrink(),
                 loading: () => const CircularProgressIndicator(),
@@ -84,7 +84,7 @@ class LoginPage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               const Text(
-                'Seguridad: Google + ID unico de usuario. Para blindar cuentas duplicadas al 100%, se recomienda validar telefono o documento en backend.',
+                'Seguridad: Google + ID único de usuario. Para blindar cuentas duplicadas al 100%, se recomienda validar teléfono o documento en backend.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12),
               ),
