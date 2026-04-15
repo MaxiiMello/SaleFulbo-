@@ -28,7 +28,7 @@ class LoginPage extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               const Text(
-                'Ingresa con Google para publicar y unirte a partidos.',
+                'Accede con Google para publicar y unirte a partidos.',
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
