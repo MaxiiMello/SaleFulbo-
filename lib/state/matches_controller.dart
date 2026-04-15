@@ -1,11 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/match_post.dart';
-import '../services/local_storage_service.dart';
+import '../services/firestore_service.dart';
+
+final firestoreServiceProvider = Provider<FirestoreService>((Ref ref) {
+  return FirestoreService();
+});
+
+final matchesStreamProvider = StreamProvider<List<MatchPost>>((Ref ref) {
+  final FirestoreService firestore = ref.watch(firestoreServiceProvider);
+  return firestore.watchMatches();
+});
 
 final matchesControllerProvider =
-    StateNotifierProvider<MatchesController, List<MatchPost>>((Ref ref) {
-  return MatchesController(LocalStorageService.instance);
+    StateNotifierProvider<MatchesController, AsyncValue<List<MatchPost>>>((Ref ref) {
+  return MatchesController(ref.watch(firestoreServiceProvider))..init();
 });
 
 enum JoinMatchStatus { joined, alreadyJoined, full, closed, creatorCannotJoin, notFound }
@@ -26,30 +35,41 @@ class CloseMatchResult {
   final MatchPost? match;
 }
 
-class MatchesController extends StateNotifier<List<MatchPost>> {
-  MatchesController(this._storage) : super(const <MatchPost>[]) {
-    _loadMatches();
-  }
+class MatchesController extends StateNotifier<AsyncValue<List<MatchPost>>> {
+  MatchesController(this._firestore)
+      : super(const AsyncValue.loading());
 
-  final LocalStorageService _storage;
+  final FirestoreService _firestore;
+  List<MatchPost> _cachedMatches = <MatchPost>[];
 
-  Future<void> _loadMatches() async {
-    state = await _storage.loadMatches();
+  Future<void> init() async {
+    _firestore.watchMatches().listen(
+      (List<MatchPost> matches) {
+        _cachedMatches = matches;
+        state = AsyncValue.data(matches);
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        state = AsyncValue.error(error, stackTrace);
+      },
+    );
   }
 
   Future<void> addMatch(MatchPost match) async {
-    state = <MatchPost>[match, ...state];
-    await _storage.saveMatches(state);
+    try {
+      await _firestore.createMatch(match);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<void> adjustMissingPlayers(String matchId, int delta) async {
-    state = state.map((MatchPost match) {
-      if (match.id != matchId) return match;
-      final int nextMissing = (match.missingPlayers + delta).clamp(0, match.totalPlayers);
-      return match.copyWith(missingPlayers: nextMissing);
-    }).toList();
-
-    await _storage.saveMatches(state);
+    try {
+      await _firestore.adjustMissingPlayers(matchId, delta);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<JoinMatchResult> joinAsPlayer(String matchId, String userId) async {
@@ -70,18 +90,13 @@ class MatchesController extends StateNotifier<List<MatchPost>> {
       return JoinMatchResult(status: JoinMatchStatus.alreadyJoined, match: target);
     }
 
-    final Set<String> joined = Set<String>.from(target.joinedPlayerIds)..add(userId);
-    final MatchPost updated = target.copyWith(
-      missingPlayers: (target.missingPlayers - 1).clamp(0, target.totalPlayers),
-      joinedPlayerIds: joined,
-    );
-
-    state = state.map((MatchPost match) {
-      return match.id == matchId ? updated : match;
-    }).toList();
-
-    await _storage.saveMatches(state);
-    return JoinMatchResult(status: JoinMatchStatus.joined, match: updated);
+    try {
+      await _firestore.joinMatch(matchId, userId);
+      return JoinMatchResult(status: JoinMatchStatus.joined, match: target);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   Future<CloseMatchResult> closeMatch(String matchId, String userId) async {
@@ -93,16 +108,20 @@ class MatchesController extends StateNotifier<List<MatchPost>> {
       return const CloseMatchResult(status: CloseMatchStatus.notAuthorized);
     }
 
-    state = state.where((MatchPost match) => match.id != matchId).toList();
-
-    await _storage.saveMatches(state);
-    return const CloseMatchResult(status: CloseMatchStatus.closed);
+    try {
+      await _firestore.closeMatch(matchId);
+      return const CloseMatchResult(status: CloseMatchStatus.closed);
+    } catch (error, stackTrace) {
+      state = AsyncValue.error(error, stackTrace);
+      rethrow;
+    }
   }
 
   MatchPost? _findById(String id) {
-    for (final MatchPost match in state) {
+    for (final MatchPost match in _cachedMatches) {
       if (match.id == id) return match;
     }
     return null;
   }
 }
+

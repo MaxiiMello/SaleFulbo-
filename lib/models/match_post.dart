@@ -62,7 +62,9 @@ class MatchPost {
     required this.creatorRating,
     required this.playerRating,
     Set<String>? joinedPlayerIds,
-  }) : joinedPlayerIds = joinedPlayerIds ?? <String>{};
+    DateTime? createdAt,
+  })  : joinedPlayerIds = joinedPlayerIds ?? <String>{},
+        createdAt = createdAt ?? DateTime.now();
 
   final String id;
   final String createdByUserId;
@@ -81,6 +83,7 @@ class MatchPost {
   final double creatorRating;
   final double playerRating;
   final Set<String> joinedPlayerIds;
+  final DateTime createdAt;
 
   MatchPost copyWith({
     String? id,
@@ -100,6 +103,7 @@ class MatchPost {
     double? creatorRating,
     double? playerRating,
     Set<String>? joinedPlayerIds,
+    DateTime? createdAt,
   }) {
     return MatchPost(
       id: id ?? this.id,
@@ -119,6 +123,7 @@ class MatchPost {
       creatorRating: creatorRating ?? this.creatorRating,
       playerRating: playerRating ?? this.playerRating,
       joinedPlayerIds: joinedPlayerIds ?? Set<String>.from(this.joinedPlayerIds),
+      createdAt: createdAt ?? this.createdAt,
     );
   }
 
@@ -139,6 +144,7 @@ class MatchPost {
       'intensity': intensity.name,
       'pricePerPlayer': pricePerPlayer,
       'creatorRating': creatorRating,
+      'createdAt': createdAt.toIso8601String(),
       'playerRating': playerRating,
       'joinedPlayerIds': joinedPlayerIds.toList(),
     };
@@ -167,6 +173,7 @@ class MatchPost {
         orElse: () => MatchIntensity.tranquilo,
       ),
       pricePerPlayer: ((map['pricePerPlayer'] as num?) ?? (map['courtPrice'] as num?) ?? 0).toDouble(),
+      createdAt: DateTime.tryParse(map['createdAt'] as String? ?? '') ?? DateTime.now(),
       creatorRating: (map['creatorRating'] as num).toDouble(),
       playerRating: (map['playerRating'] as num).toDouble(),
       joinedPlayerIds: Set<String>.from(((map['joinedPlayerIds'] as List<dynamic>?) ?? <dynamic>[]).cast<String>()),

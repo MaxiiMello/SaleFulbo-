@@ -174,7 +174,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final AppUser? currentUser = ref.watch(authControllerProvider).valueOrNull;
-    final List<MatchPost> matches = ref.watch(matchesControllerProvider);
+    final AsyncValue<List<MatchPost>> matchesAsync = ref.watch(matchesControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -196,32 +196,51 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         ],
       ),
-      body: matches.isEmpty
-          ? const EmptyState()
-          : ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              itemCount: matches.length,
-              itemBuilder: (BuildContext context, int index) {
-                final MatchPost match = matches[index];
-                return MatchCard(
-                  match: match,
-                  currentUserId: currentUser?.id ?? '',
-                  onOpenMap: () => _openCourtMap(match),
-                  onJoin: () {
-                    _joinAsPlayer(match);
-                  },
-                  onCreatorPlus: () {
-                    _adjustMissingPlayers(match, 1);
-                  },
-                  onCreatorMinus: () {
-                    _adjustMissingPlayers(match, -1);
-                  },
-                  onCloseMatch: () {
-                    _closeMatch(match);
+      body: matchesAsync.when(
+        data: (List<MatchPost> matches) {
+          return matches.isEmpty
+              ? const EmptyState()
+              : ListView.builder(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+                  itemCount: matches.length,
+                  itemBuilder: (BuildContext context, int index) {
+                    final MatchPost match = matches[index];
+                    return MatchCard(
+                      match: match,
+                      currentUserId: currentUser?.id ?? '',
+                      onOpenMap: () => _openCourtMap(match),
+                      onJoin: () {
+                        _joinAsPlayer(match);
+                      },
+                      onCreatorPlus: () {
+                        _adjustMissingPlayers(match, 1);
+                      },
+                      onCreatorMinus: () {
+                        _adjustMissingPlayers(match, -1);
+                      },
+                      onCloseMatch: () {
+                        _closeMatch(match);
+                      },
+                    );
                   },
                 );
-              },
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (Object error, StackTrace stackTrace) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                const SizedBox(height: 12),
+                const Text('Error al cargar los partidos'),
+                const SizedBox(height: 8),
+                Text('$error', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+              ],
             ),
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _openCreateMatchForm,
         icon: const Icon(Icons.sports_soccer),
