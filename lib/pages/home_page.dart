@@ -58,11 +58,11 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     if (match == null) return;
-    await ref.read(matchesControllerProvider.notifier).addMatch(match);
+    await ref.read(matchesControllerProvider).addMatch(match);
   }
 
   void _adjustMissingPlayers(MatchPost match, int delta) {
-    ref.read(matchesControllerProvider.notifier).adjustMissingPlayers(match.id, delta);
+    ref.read(matchesControllerProvider).adjustMissingPlayers(match.id, delta);
   }
 
   Future<void> _joinAsPlayer(MatchPost match) async {
@@ -73,7 +73,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
 
     final JoinMatchResult result =
-        await ref.read(matchesControllerProvider.notifier).joinAsPlayer(match.id, currentUser.id);
+        await ref.read(matchesControllerProvider).joinAsPlayer(match.id, currentUser.id);
 
     if (!mounted) return;
 
@@ -113,7 +113,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     if (!shouldClose) return;
 
     final CloseMatchResult result =
-        await ref.read(matchesControllerProvider.notifier).closeMatch(match.id, currentUser.id);
+        await ref.read(matchesControllerProvider).closeMatch(match.id, currentUser.id);
 
     if (!mounted) return;
     switch (result.status) {
@@ -174,7 +174,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final AppUser? currentUser = ref.watch(authControllerProvider).valueOrNull;
-    final AsyncValue<List<MatchPost>> matchesAsync = ref.watch(matchesControllerProvider);
+    final AsyncValue<List<MatchPost>> matchesAsync = ref.watch(matchesStreamProvider);
 
     return Scaffold(
       appBar: AppBar(
