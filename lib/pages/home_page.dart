@@ -58,7 +58,13 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
 
     if (match == null) return;
-    await ref.read(matchesControllerProvider).addMatch(match);
+    
+    try {
+      await ref.read(matchesControllerProvider).addMatch(match);
+      _showSimpleMessage('Partido publicado exitosamente');
+    } catch (e) {
+      _showSimpleMessage('Error al publicar: $e');
+    }
   }
 
   void _adjustMissingPlayers(MatchPost match, int delta) {
