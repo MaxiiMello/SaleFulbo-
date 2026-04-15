@@ -8,6 +8,7 @@ import 'pages/create_match_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
 import 'pages/register_page.dart';
+import 'pages/splash_page.dart';
 import 'state/auth_controller.dart';
 
 class SaleFulboApp extends ConsumerWidget {
@@ -27,20 +28,40 @@ class SaleFulboApp extends ConsumerWidget {
       initialRoute: AppRoutes.login,
       onGenerateRoute: (RouteSettings settings) {
         final bool isLogged = authState.valueOrNull != null;
+        final bool isLoading = authState.isLoading;
+        
         switch (settings.name) {
           case AppRoutes.login:
+            if (isLoading) {
+              return MaterialPageRoute<void>(
+                builder: (BuildContext context) => const SplashPage(),
+                settings: settings,
+              );
+            }
             return MaterialPageRoute<void>(
               builder: (BuildContext context) =>
                   isLogged ? const HomePage() : const LoginPage(),
               settings: settings,
             );
           case AppRoutes.register:
+            if (isLoading) {
+              return MaterialPageRoute<void>(
+                builder: (BuildContext context) => const SplashPage(),
+                settings: settings,
+              );
+            }
             return MaterialPageRoute<void>(
               builder: (BuildContext context) =>
                   isLogged ? const HomePage() : const RegisterPage(),
               settings: settings,
             );
           case AppRoutes.home:
+            if (isLoading) {
+              return MaterialPageRoute<void>(
+                builder: (BuildContext context) => const SplashPage(),
+                settings: settings,
+              );
+            }
             return MaterialPageRoute<void>(
               builder: (BuildContext context) =>
                   isLogged ? const HomePage() : const LoginPage(),
@@ -55,6 +76,12 @@ class SaleFulboApp extends ConsumerWidget {
               settings: settings,
             );
           default:
+            if (isLoading) {
+              return MaterialPageRoute<void>(
+                builder: (BuildContext context) => const SplashPage(),
+                settings: settings,
+              );
+            }
             return MaterialPageRoute<void>(
               builder: (BuildContext context) =>
                   isLogged ? const HomePage() : const LoginPage(),
