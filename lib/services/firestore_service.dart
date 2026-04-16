@@ -16,21 +16,24 @@ class FirestoreService {
   Stream<List<MatchPost>> watchMatches() {
     developer.log('watchMatches: Iniciando stream de Firestore');
     try {
+      // Sin where, solo orderBy para evitar necesidad de índice
       return _firestore
           .collection(_matchesCollection)
-          .where('isClosed', isEqualTo: false)
           .orderBy('createdAt', descending: true)
           .snapshots()
           .map((QuerySnapshot snapshot) {
-        developer.log('watchMatches: Recibidos ${snapshot.docs.length} matches');
-        return snapshot.docs
+        developer.log('watchMatches: Recibidos ${snapshot.docs.length} documentos totales');
+        final List<MatchPost> matches = snapshot.docs
             .map((QueryDocumentSnapshot doc) {
               return MatchPost.fromMap({
                 'id': doc.id,
                 ...doc.data() as Map<String, dynamic>,
               });
             })
+            .where((MatchPost m) => !m.isClosed) // Filtrar en cliente
             .toList();
+        developer.log('watchMatches: ${matches.length} matches activos (no cerrados)');
+        return matches;
       });
     } catch (e) {
       developer.log('watchMatches ERROR: $e', error: e);
