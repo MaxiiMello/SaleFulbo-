@@ -59,11 +59,15 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (match == null) return;
     
+    final AppUser? user = ref.read(authControllerProvider).valueOrNull;
+    _showSimpleMessage('Usuario: ${user?.displayName ?? 'DESCONOCIDO'}');
+    _showSimpleMessage('Publicando: ${match.title}...');
+    
     try {
       await ref.read(matchesControllerProvider).addMatch(match);
-      _showSimpleMessage('Partido publicado exitosamente');
+      _showSimpleMessage('✅ ¡Partido publicado!');
     } catch (e) {
-      _showSimpleMessage('Error al publicar: $e');
+      _showSimpleMessage('❌ ERROR: $e');
     }
   }
 

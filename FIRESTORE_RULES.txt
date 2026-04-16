@@ -1,0 +1,32 @@
+PASOS PARA APLICAR FIRESTORE RULES EN FIREBASE CONSOLE:
+====================================================
+
+1. Ve a: https://console.firebase.google.com
+2. Selecciona proyecto: "salefulbto"
+3. En la izquierda: Firestore Database
+4. Clic en pestaña: "Rules"
+5. REEMPLAZA TODO con esto:
+
+---START COPY HERE---
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /matches/{matchId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && resource.data.createdByUserId == request.auth.uid;
+    }
+  }
+}
+
+---END COPY HERE---
+
+6. Haz clic en "Publish"
+7. Espera a que diga "Rules Updated"
+8. Vuelve a intentar crear un partido en https://maxiimello.github.io/SaleFulbo-/
+
+Nota: Estas reglas permiten que cualquier usuario autenticado:
+- LEA todos los partidos
+- CREE nuevos partidos
+- SOLO EDITE/BORRE sus propios partidos (por createdByUserId)
