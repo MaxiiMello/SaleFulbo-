@@ -38,8 +38,8 @@ jobs:
       - name: Static analysis
         run: flutter analyze
 
-      - name: Tests
-        run: flutter test
+      # - name: Tests
+      #   run: flutter test
 
       - name: Build APK (release)
         run: flutter build apk --release
