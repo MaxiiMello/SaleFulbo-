@@ -46,6 +46,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   Future<void> _openCreateMatchForm() async {
+    _showSimpleMessage('🟢 ABRIENDO FORMULARIO...');
     final AppUser? currentUser = ref.read(authControllerProvider).valueOrNull;
     if (currentUser == null) {
       _showSimpleMessage('Necesitas iniciar sesion.');
@@ -57,6 +58,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       arguments: currentUser,
     );
 
+    _showSimpleMessage('🔵 FORM CERRADO, match null? ${match == null}');
     if (match == null) return;
     
     final AppUser? user = ref.read(authControllerProvider).valueOrNull;
