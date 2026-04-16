@@ -159,7 +159,12 @@ class _CreateMatchPageState extends State<CreateMatchPage> {
 
   void _submit() {
     final bool valid = _formKey.currentState?.validate() ?? false;
-    if (!valid) return;
+    if (!valid) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor, completa todos los campos correctamente.')),
+      );
+      return;
+    }
 
     final double latitude =
         _selectedLatitude ?? _currentPosition?.latitude ?? -30.9015;
