@@ -14,30 +14,37 @@ class FirestoreService {
 
   /// Stream de todos los matches activos (no cerrados)
   Stream<List<MatchPost>> watchMatches() {
-    developer.log('watchMatches: Iniciando stream de Firestore');
+    developer.log('🔵 watchMatches: Iniciando stream');
     try {
-      // Sin where, solo orderBy para evitar necesidad de índice
+      // Query SIMPLE: traer todos, sin filtros ni order para evitar índices
       return _firestore
           .collection(_matchesCollection)
-          .orderBy('createdAt', descending: true)
           .snapshots()
           .map((QuerySnapshot snapshot) {
-        developer.log('watchMatches: Recibidos ${snapshot.docs.length} documentos totales');
-        final List<MatchPost> matches = snapshot.docs
+        developer.log('🟢 watchMatches: ${snapshot.docs.length} docs recibidos');
+        
+        // Parse y filtrar
+        final List<MatchPost> allMatches = snapshot.docs
             .map((QueryDocumentSnapshot doc) {
               return MatchPost.fromMap({
                 'id': doc.id,
                 ...doc.data() as Map<String, dynamic>,
               });
             })
-            .where((MatchPost m) => !m.isClosed) // Filtrar en cliente
             .toList();
-        developer.log('watchMatches: ${matches.length} matches activos (no cerrados)');
-        return matches;
+        
+        // Filtrar cerrados y ordenar por fecha (en cliente)
+        final List<MatchPost> activeMatches = allMatches
+            .where((MatchPost m) => !m.isClosed)
+            .toList()
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        
+        developer.log('🟢 watchMatches: ${activeMatches.length}/${allMatches.length} activos');
+        return activeMatches;
       });
     } catch (e) {
-      developer.log('watchMatches ERROR: $e', error: e);
-      rethrow;
+      developer.log('❌ watchMatches ERROR: $e', error: e);
+      return Stream.value(<MatchPost>[]);
     }
   }
 
