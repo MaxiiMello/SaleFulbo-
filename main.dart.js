@@ -30321,10 +30321,8 @@ axK:function axK(a){this.a=a},
 axz:function axz(a,b){this.a=a
 this.b=b},
 DF:function DF(a){this.a=a},
-JN:function JN(a){var _=this
-_.w=$
-_.x=a
-_.d=$
+JN:function JN(){var _=this
+_.d=_.w=$
 _.c=_.a=null},
 aAR:function aAR(a){this.a=a},
 aAP:function aAP(a){this.a=a},
@@ -103070,7 +103068,7 @@ A.axz.prototype={
 $0(){this.a.z=B.d.aM(this.b)},
 $S:0}
 A.DF.prototype={
-ai(){return new A.JN(A.aL(t.N))}}
+ai(){return new A.JN()}}
 A.JN.prototype={
 av(){var s=this
 s.aO()
