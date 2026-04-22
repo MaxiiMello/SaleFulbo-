@@ -50,8 +50,8 @@ class StorageService {
       final Reference ref = FirebaseStorage.instance.refFromURL(photoUrl);
       await ref.delete();
     } catch (e) {
-      // Log pero no fallar si delete falla
-      print('Error deleting photo: $e');
+      // Silently handle delete failures
+      // If critical logging needed, use Firebase Crashlytics instead
     }
   }
 }

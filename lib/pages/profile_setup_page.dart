@@ -18,6 +18,8 @@ class ProfileSetupPage extends ConsumerStatefulWidget {
 class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   late TextEditingController _nicknameController;
   File? _selectedPhoto;
+  // TODO: Use this field when implementing Firestore profile persistence
+  // String? _uploadedPhotoUrl;
   bool _isLoading = false;
 
   @override
@@ -52,24 +54,21 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     setState(() => _isLoading = true);
 
     try {
-      String? photoUrl = user.photoUrl;
-
-      // Si hay una foto nuevamente seleccionada, uploadearla
+      // Si hay una foto nuevamente seleccionada, uploadearla a Storage
+      // TODO: Store URL and save profile to Firestore in next session
       if (_selectedPhoto != null) {
         final StorageService storage = StorageService();
-        photoUrl = await storage.uploadProfilePhoto(
+        await storage.uploadProfilePhoto(
           userId: user.id,
           imageFile: _selectedPhoto!,
         );
       }
 
-      // Actualizar perfil del usuario
-      final AppUser updatedUser = user.copyWith(
-        nickname: nickname,
-        photoUrl: photoUrl,
-      );
-
-      // TODO: Guardar cambios en Firestore
+      // TODO: Guardar perfil en Firestore...
+      // final AppUser updatedUser = user.copyWith(
+      //   nickname: nickname,
+      //   photoUrl: photoUrl,
+      // );
       // await ref.read(authControllerProvider.notifier).updateProfile(updatedUser);
 
       if (mounted) {

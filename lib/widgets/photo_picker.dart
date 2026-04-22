@@ -24,13 +24,17 @@ class _PhotoPickerState extends State<PhotoPicker> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage() async {
+    if (!mounted) return;
+    
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
-        imageQuality: 70, // Compress a 70%
+        imageQuality: 70,
         maxWidth: 800,
         maxHeight: 800,
       );
+
+      if (!mounted) return;
 
       if (pickedFile != null) {
         final File file = File(pickedFile.path);
@@ -40,6 +44,7 @@ class _PhotoPickerState extends State<PhotoPicker> {
         widget.onPhotoSelected(file);
       }
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error al seleccionar foto: $e')),
       );
@@ -68,7 +73,7 @@ class _PhotoPickerState extends State<PhotoPicker> {
                     width: 120,
                     height: 120,
                     fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) {
+                    errorBuilder: (BuildContext context, Object error, StackTrace? stackTrace) {
                       return Container(
                         width: 120,
                         height: 120,
