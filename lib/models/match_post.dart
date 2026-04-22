@@ -152,7 +152,7 @@ class MatchPost {
 
   factory MatchPost.fromMap(Map<dynamic, dynamic> map) {
     // Helper para parsear DateTime desde Firestore (puede ser String o Timestamp)
-    DateTime _parseDateTime(dynamic value) {
+    DateTime parseDateTime(dynamic value) {
       if (value == null) return DateTime.now().add(const Duration(hours: 1));
       
       if (value is String) {
@@ -185,7 +185,7 @@ class MatchPost {
       missingPlayers: map['missingPlayers'] as int,
       latitude: (map['latitude'] as num).toDouble(),
       longitude: (map['longitude'] as num).toDouble(),
-      scheduledAt: _parseDateTime(map['scheduledAt']),
+      scheduledAt: parseDateTime(map['scheduledAt']),
       isClosed: map['isClosed'] as bool? ?? false,
       format: FootballFormat.values.firstWhere(
         (FootballFormat v) => v.name == map['format'],
@@ -196,7 +196,7 @@ class MatchPost {
         orElse: () => MatchIntensity.tranquilo,
       ),
       pricePerPlayer: ((map['pricePerPlayer'] as num?) ?? (map['courtPrice'] as num?) ?? 0).toDouble(),
-      createdAt: _parseDateTime(map['createdAt']),
+      createdAt: parseDateTime(map['createdAt']),
       creatorRating: (map['creatorRating'] as num).toDouble(),
       playerRating: (map['playerRating'] as num).toDouble(),
       joinedPlayerIds: Set<String>.from(((map['joinedPlayerIds'] as List<dynamic>?) ?? <dynamic>[]).cast<String>()),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../models/match_post.dart';
 import 'empty_state.dart';
-import 'match_card.dart';
 
 /// Widget para mostrar historial de partidos en Format TabBar
 class MatchHistoryWidget extends StatefulWidget {
@@ -158,7 +157,7 @@ class _MatchHistoryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.2),
+                      color: Colors.green.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -174,7 +173,7 @@ class _MatchHistoryCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.2),
+                      color: Colors.orange.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -230,7 +229,7 @@ class _MatchHistoryCard extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        backgroundColor: Colors.blue.withOpacity(0.1),
+                          backgroundColor: Colors.blue.withValues(alpha: 0.1),
                         side: BorderSide.none,
                       ),
                     )

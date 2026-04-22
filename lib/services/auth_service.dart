@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'dart:developer' as developer;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -46,7 +47,7 @@ class AuthService {
         }
       } catch (e) {
         // Si hay error cargando de Firestore, usar datos básicos
-        print('Error cargando perfil de Firestore: $e');
+        developer.log('Error cargando perfil de Firestore: $e', error: e);
       }
       
       return baseUser;
