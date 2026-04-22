@@ -7,6 +7,7 @@ import 'navigation/app_routes.dart';
 import 'pages/create_match_page.dart';
 import 'pages/home_page.dart';
 import 'pages/login_page.dart';
+import 'pages/profile_setup_page.dart';
 import 'pages/register_page.dart';
 import 'pages/splash_page.dart';
 import 'state/auth_controller.dart';
@@ -73,6 +74,12 @@ class SaleFulboApp extends ConsumerWidget {
               builder: (BuildContext context) => isLogged && creator != null
                   ? CreateMatchPage(currentUser: creator)
                   : const LoginPage(),
+              settings: settings,
+            );
+          case AppRoutes.profileSetup:
+            return MaterialPageRoute<void>(
+              builder: (BuildContext context) =>
+                  isLogged ? const ProfileSetupPage() : const LoginPage(),
               settings: settings,
             );
           default:
