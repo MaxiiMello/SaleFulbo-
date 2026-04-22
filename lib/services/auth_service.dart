@@ -4,6 +4,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 import '../models/app_user.dart';
+import './firestore_service.dart';
 
 class AuthService {
   AuthService({FirebaseAuth? firebaseAuth, GoogleSignIn? googleSignIn})
@@ -20,7 +21,36 @@ class AuthService {
     if (_firebaseAuth == null) {
       return Stream<AppUser?>.value(_demoUser);
     }
-    return _firebaseAuth.authStateChanges().map(_mapFirebaseUser);
+    
+    return _firebaseAuth.authStateChanges().asyncMap<AppUser?>((User? firebaseUser) async {
+      if (firebaseUser == null) return null;
+      
+      // Mapear usuario de Firebase
+      final AppUser baseUser = AppUser(
+        id: firebaseUser.uid,
+        displayName: firebaseUser.displayName ?? 'Jugador',
+        email: firebaseUser.email ?? 'sin-email',
+      );
+      
+      // Intentar cargar perfil completo de Firestore (nickname, photoUrl, etc.)
+      try {
+        final FirestoreService firestore = FirestoreService();
+        final AppUser? firestoreUser = await firestore.loadUserProfile(firebaseUser.uid);
+        
+        if (firestoreUser != null) {
+          // Combinar datos de Firebase con datos de Firestore
+          return baseUser.copyWith(
+            nickname: firestoreUser.nickname,
+            photoUrl: firestoreUser.photoUrl,
+          );
+        }
+      } catch (e) {
+        // Si hay error cargando de Firestore, usar datos básicos
+        print('Error cargando perfil de Firestore: $e');
+      }
+      
+      return baseUser;
+    });
   }
 
   AppUser? get currentUser => _firebaseAuth == null ? _demoUser : _mapFirebaseUser(_firebaseAuth.currentUser);

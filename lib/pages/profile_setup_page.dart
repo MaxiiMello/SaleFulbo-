@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/app_user.dart';
+import '../services/firestore_service.dart';
 import '../services/storage_service.dart';
 import '../state/auth_controller.dart';
 import '../widgets/photo_picker.dart';
@@ -54,22 +55,26 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
     setState(() => _isLoading = true);
 
     try {
+      String? photoUrl = user.photoUrl;
+      
       // Si hay una foto nuevamente seleccionada, uploadearla a Storage
-      // TODO: Store URL and save profile to Firestore in next session
       if (_selectedPhoto != null) {
         final StorageService storage = StorageService();
-        await storage.uploadProfilePhoto(
+        photoUrl = await storage.uploadProfilePhoto(
           userId: user.id,
           imageFile: _selectedPhoto!,
         );
       }
 
-      // TODO: Guardar perfil en Firestore...
-      // final AppUser updatedUser = user.copyWith(
-      //   nickname: nickname,
-      //   photoUrl: photoUrl,
-      // );
-      // await ref.read(authControllerProvider.notifier).updateProfile(updatedUser);
+      // Crear usuario actualizado con nickname y photoUrl
+      final AppUser updatedUser = user.copyWith(
+        nickname: nickname,
+        photoUrl: photoUrl,
+      );
+      
+      // Guardar en Firestore
+      final FirestoreService firestore = FirestoreService();
+      await firestore.updateUserProfile(updatedUser);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

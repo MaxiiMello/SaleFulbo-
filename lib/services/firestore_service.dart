@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/app_user.dart';
 import '../models/match_post.dart';
 
 class FirestoreService {
@@ -11,19 +12,21 @@ class FirestoreService {
   final FirebaseFirestore _firestore;
 
   static const String _matchesCollection = 'matches';
+  static const String _usersCollection = 'users';
 
-  /// Stream de todos los matches activos (no cerrados)
+  /// Stream de matches activos (no cerrados y fecha futura)
   Stream<List<MatchPost>> watchMatches() {
     developer.log('🔵 watchMatches: Iniciando stream');
     try {
-      // Query SIMPLE: traer todos, sin filtros ni order para evitar índices
+      final DateTime now = DateTime.now();
+      
       return _firestore
           .collection(_matchesCollection)
           .snapshots()
           .map((QuerySnapshot snapshot) {
         developer.log('🟢 watchMatches: ${snapshot.docs.length} docs recibidos');
         
-        // Parse y filtrar
+        // Parse todos
         final List<MatchPost> allMatches = snapshot.docs
             .map((QueryDocumentSnapshot doc) {
               return MatchPost.fromMap({
@@ -33,13 +36,13 @@ class FirestoreService {
             })
             .toList();
         
-        // Filtrar cerrados y ordenar por fecha (en cliente)
+        // Filtrar: NO cerrados Y fecha futura
         final List<MatchPost> activeMatches = allMatches
-            .where((MatchPost m) => !m.isClosed)
+            .where((MatchPost m) => !m.isClosed && m.scheduledAt.isAfter(now))
             .toList()
-          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          ..sort((a, b) => a.scheduledAt.compareTo(b.scheduledAt));
         
-        developer.log('🟢 watchMatches: ${activeMatches.length}/${allMatches.length} activos');
+        developer.log('🟢 watchMatches: ${activeMatches.length} activos de ${allMatches.length} totales');
         return activeMatches;
       });
     } catch (e) {
@@ -124,6 +127,127 @@ class FirestoreService {
       });
     } catch (e) {
       developer.log('getMatch ERROR: $e', error: e);
+      return null;
+    }
+  }
+
+  /// Obtener historial de partidos jugados por un usuario
+  Future<List<MatchPost>> getUserPlayedMatches(String userId) async {
+    try {
+      developer.log('getUserPlayedMatches: Buscando partidos jugados por $userId');
+      
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_matchesCollection)
+          .get();
+
+      final List<MatchPost> allMatches = snapshot.docs
+          .map((QueryDocumentSnapshot doc) {
+            return MatchPost.fromMap({
+              'id': doc.id,
+              ...doc.data() as Map<String, dynamic>,
+            });
+          })
+          .toList();
+
+      // Filtrar: partidos cerrados donde el usuario está en joinedPlayerIds
+      final List<MatchPost> playedMatches = allMatches
+          .where((MatchPost m) => 
+              m.isClosed && 
+              m.joinedPlayerIds.contains(userId) &&
+              m.scheduledAt.isBefore(DateTime.now()))
+          .toList()
+        ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+
+      developer.log('getUserPlayedMatches: ${playedMatches.length} partidos encontrados');
+      return playedMatches;
+    } catch (e) {
+      developer.log('getUserPlayedMatches ERROR: $e', error: e);
+      return <MatchPost>[];
+    }
+  }
+
+  /// Obtener historial de partidos organizados por un usuario
+  Future<List<MatchPost>> getUserOrganizedMatches(String userId) async {
+    try {
+      developer.log('getUserOrganizedMatches: Buscando partidos organizados por $userId');
+      
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_matchesCollection)
+          .get();
+
+      final List<MatchPost> allMatches = snapshot.docs
+          .map((QueryDocumentSnapshot doc) {
+            return MatchPost.fromMap({
+              'id': doc.id,
+              ...doc.data() as Map<String, dynamic>,
+            });
+          })
+          .toList();
+
+      // Filtrar: partidos organizados por el usuario (createdByUserId == userId)
+      final List<MatchPost> organizedMatches = allMatches
+          .where((MatchPost m) => 
+              m.createdByUserId == userId &&
+              (m.isClosed || m.scheduledAt.isBefore(DateTime.now())))
+          .toList()
+        ..sort((a, b) => b.scheduledAt.compareTo(a.scheduledAt));
+
+      developer.log('getUserOrganizedMatches: ${organizedMatches.length} partidos encontrados');
+      return organizedMatches;
+    } catch (e) {
+      developer.log('getUserOrganizedMatches ERROR: $e', error: e);
+      return <MatchPost>[];
+    }
+  }
+
+  /// Guardar o actualizar perfil de usuario en Firestore
+  Future<void> updateUserProfile(AppUser user) async {
+    try {
+      developer.log('updateUserProfile: Guardando perfil de ${user.id}');
+      
+      await _firestore.collection(_usersCollection).doc(user.id).set({
+        'id': user.id,
+        'displayName': user.displayName,
+        'email': user.email,
+        'nickname': user.nickname ?? '',
+        'photoUrl': user.photoUrl ?? '',
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+      
+      developer.log('updateUserProfile: Perfil guardado exitosamente');
+    } catch (e) {
+      developer.log('updateUserProfile ERROR: $e', error: e);
+      rethrow;
+    }
+  }
+
+  /// Cargar perfil de usuario desde Firestore
+  Future<AppUser?> loadUserProfile(String userId) async {
+    try {
+      developer.log('loadUserProfile: Cargando perfil de $userId');
+      
+      final DocumentSnapshot doc = 
+          await _firestore.collection(_usersCollection).doc(userId).get();
+      
+      if (!doc.exists) {
+        developer.log('loadUserProfile: Perfil no encontrado para $userId');
+        return null;
+      }
+      
+      final Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
+      
+      final AppUser user = AppUser(
+        id: data['id'] as String,
+        displayName: data['displayName'] as String? ?? 'Jugador',
+        email: data['email'] as String? ?? '',
+        nickname: data['nickname'] as String?,
+        photoUrl: data['photoUrl'] as String?,
+      );
+      
+      developer.log('loadUserProfile: Perfil cargado exitosamente para $userId');
+      return user;
+    } catch (e) {
+      developer.log('loadUserProfile ERROR: $e', error: e);
       return null;
     }
   }

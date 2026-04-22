@@ -151,6 +151,30 @@ class MatchPost {
   }
 
   factory MatchPost.fromMap(Map<dynamic, dynamic> map) {
+    // Helper para parsear DateTime desde Firestore (puede ser String o Timestamp)
+    DateTime _parseDateTime(dynamic value) {
+      if (value == null) return DateTime.now().add(const Duration(hours: 1));
+      
+      if (value is String) {
+        final DateTime? parsed = DateTime.tryParse(value);
+        if (parsed != null) return parsed;
+      }
+      
+      // Si es Timestamp de Firestore
+      if (value.runtimeType.toString().contains('Timestamp')) {
+        try {
+          final dynamic timestamp = value;
+          if (timestamp.toDate != null) {
+            return timestamp.toDate() as DateTime;
+          }
+        } catch (e) {
+          // Fallback
+        }
+      }
+      
+      return DateTime.now().add(const Duration(hours: 1));
+    }
+    
     return MatchPost(
       id: map['id'] as String,
       createdByUserId: map['createdByUserId'] as String? ?? 'legacy-creator',
@@ -161,8 +185,7 @@ class MatchPost {
       missingPlayers: map['missingPlayers'] as int,
       latitude: (map['latitude'] as num).toDouble(),
       longitude: (map['longitude'] as num).toDouble(),
-      scheduledAt:
-          DateTime.tryParse(map['scheduledAt'] as String? ?? '') ?? DateTime.now().add(const Duration(hours: 1)),
+      scheduledAt: _parseDateTime(map['scheduledAt']),
       isClosed: map['isClosed'] as bool? ?? false,
       format: FootballFormat.values.firstWhere(
         (FootballFormat v) => v.name == map['format'],
@@ -173,7 +196,7 @@ class MatchPost {
         orElse: () => MatchIntensity.tranquilo,
       ),
       pricePerPlayer: ((map['pricePerPlayer'] as num?) ?? (map['courtPrice'] as num?) ?? 0).toDouble(),
-      createdAt: DateTime.tryParse(map['createdAt'] as String? ?? '') ?? DateTime.now(),
+      createdAt: _parseDateTime(map['createdAt']),
       creatorRating: (map['creatorRating'] as num).toDouble(),
       playerRating: (map['playerRating'] as num).toDouble(),
       joinedPlayerIds: Set<String>.from(((map['joinedPlayerIds'] as List<dynamic>?) ?? <dynamic>[]).cast<String>()),
