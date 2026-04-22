@@ -27,6 +27,14 @@ class _ProfileSetupPageState extends ConsumerState<ProfileSetupPage> {
   void initState() {
     super.initState();
     _nicknameController = TextEditingController();
+    _loadCurrentProfile();
+  }
+
+  Future<void> _loadCurrentProfile() async {
+    final AppUser? user = ref.read(authControllerProvider).valueOrNull;
+    if (user != null && user.nickname != null) {
+      _nicknameController.text = user.nickname!;
+    }
   }
 
   @override
